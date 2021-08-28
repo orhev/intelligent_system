@@ -73,11 +73,15 @@ class Route:
         incline = rf.get_route_incline(self.route)
         self.avg_incline = incline[0]
         self.max_incline = incline[1]
+        sharp_incline = rf.sharp_incline(self.route)
+        self.sharp_incline_percent =sharp_incline[0]
+        self.sharp_incline_distance = sharp_incline[1]
 
     def return_properties(self):
         properties = {'length': self.length, 'avg_incline': self.avg_incline,
                              'max_incline': self.max_incline, 'num_of_bus_exchange': int,
-                             'travle_time': float}
+                             'travle_time': float, 'sharp_incline_percent': self.sharp_incline_percent,
+                      'sharp_incline_distance': self.sharp_incline_distance}
         return properties
 
 
