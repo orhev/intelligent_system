@@ -2,12 +2,12 @@ from geopy.geocoders import Nominatim
 from pyroutelib3 import Router
 from geopy.distance import geodesic
 import requests
-import time
-
+import gmplot
 
 
 def get_address_landmark(address):
-    """gets the latitude and longitude coordinates from point's address
+    """
+    Gets the latitude and longitude coordinates from point's address
 
     Parameters
     ----------
@@ -26,7 +26,8 @@ def get_address_landmark(address):
 
 
 def get_route(start_point, end_point, transport_modes):
-    """gets the route between start_point and end_point.
+    """
+    Gets the route between start_point and end_point.
 
     Parameters
     ----------
@@ -72,7 +73,8 @@ def get_route(start_point, end_point, transport_modes):
 
 
 def get_route_distance(route):
-    """calculates the length of the route according to the distance between every 2 points.
+    """
+    Calculates the length of the route according to the distance between every 2 points.
     Parameters
     ----------
     route : list
@@ -93,7 +95,8 @@ def get_route_distance(route):
 
 
 def get_elevation(route):
-    """Returns the point height (height above sea level)
+    """
+    Returns the point height (height above sea level)
 
     Parameters
     ----------
@@ -116,8 +119,36 @@ def get_elevation(route):
     return elevation
 
 
+def incline_along_route(route):
+    """
+    Calculate the inclines and distances between two consecutive points in the route
+
+    Parameters
+    ----------
+    route : list
+        A route between start point and end point as a list of coordinates nodes (latitude, longitude)
+
+    Returns
+    -------
+    incline, distance : tuple (list, list)
+        A tuple contains a list of the inclines and distances between two consecutive points in the route
+
+    """
+
+    incline = []
+    distance = []
+
+    if route:
+        elevation = get_elevation(route)
+        for i in range(len(route) - 1):
+            distance.append(geodesic(route[i], route[i + 1]).m)
+            incline.append(((elevation[i + 1] - elevation[i]) / distance[i]) * 100)
+
+    return incline, distance
+
 def get_route_incline(route):
-    """Returns the average incline and maximum incline
+    """
+    Returns the average incline and maximum incline
 
     Parameters
     ----------
@@ -129,15 +160,36 @@ def get_route_incline(route):
     incline : tuple
         (average incline, max incline)
     """
-    incline = []
+    incline, distance = incline_along_route(route)
 
     if route:
-        elevation = get_elevation(route)
-        for i in range(len(route) - 1):
-            distance = geodesic(route[i], route[i + 1]).m
-            incline.append(((elevation[i+1] - elevation[i]) / distance) * 100)
+        return sum(incline) / len(incline), max(incline)
+    else:
+        return 0, 0
 
-    return sum(incline) / len(incline), max(incline)
+
+def sharp_incline(route):
+    """
+    Calculate the length of the route (in meters) with a sharp slope (above 10%)
+    and the percentage of this sub-route (with  a sharp slope) of the total route
+
+    Parameters
+    ----------
+    route : list
+        A route between start point and end point as a list of coordinates nodes
+
+    Returns
+    -------
+    length, percentage : tuple (int, int)
+        The length of the route with a sharp slope
+        the percentage of this sub-route with  a sharp slope
+    """
+    incline, distance = incline_along_route(route)
+    if route:
+        sharp_incline = [distance[i] for i in range(len(distance)) if incline[i] > 10]
+        return int((sum(sharp_incline) / sum(distance)) * 100), int(sum(sharp_incline))
+
+    return 0, 0
 
 
 def route_score(route, weights):
@@ -160,6 +212,4 @@ def route_score(route, weights):
     for parameter in weights.keys():
         score += route.parameter * weights[parameter]
     return score
-
-
 
