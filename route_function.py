@@ -1,8 +1,9 @@
 from geopy.geocoders import Nominatim
 from pyroutelib3 import Router
-from geopy.distance import geodesic
 import requests
 import folium
+import haversine as hs
+from haversine import Unit
 
 
 
@@ -90,7 +91,7 @@ def get_route_distance(route):
     distance = 0
     if route:
         for i in range(len(route) - 1):
-            distance += geodesic(route[i], route[i + 1]).km
+            distance += hs.haversine(route[i], route[i + 1])
 
     return distance
 
@@ -142,7 +143,7 @@ def incline_along_route(route):
     if route:
         elevation = get_elevation(route)
         for i in range(len(route) - 1):
-            distance.append(geodesic(route[i], route[i + 1]).m)
+            distance.append(hs.haversine(route[i], route[i + 1], unit=Unit.METERS))
             incline.append(((elevation[i + 1] - elevation[i]) / distance[i]) * 100)
 
     return incline, distance
