@@ -2,7 +2,8 @@ from geopy.geocoders import Nominatim
 from pyroutelib3 import Router
 from geopy.distance import geodesic
 import requests
-import gmplot
+import folium
+
 
 
 def get_address_landmark(address):
@@ -212,4 +213,28 @@ def route_score(route, weights):
     for parameter in weights.keys():
         score += route.parameter * weights[parameter]
     return score
+
+def get_route_map(route, zoom=15):
+    """
+        Creates a map with the starting point, the end point and the route
+
+        Parameters
+        ----------
+        route : list
+            A route between start point and end point as a list of coordinates nodes
+        zoom : int
+            De
+    """
+
+    start_coordinates = [route[0][0], route[0][1]]
+    end_coordinates = [route[-1][0], route[-1][1]]
+    tooltip = 'Click For More Info'
+    m = folium.Map(location=start_coordinates, zoom_start=zoom)
+    folium.Marker(start_coordinates, popup='<strong>Start Location</strong>', tooltip=tooltip).add_to(m)
+    folium.Marker(end_coordinates, popup='<strong>End Location</strong>', tooltip=tooltip).add_to(m)
+    folium.PolyLine(route, color='red', weight=10, opacity=0.8).add_to(m)
+    m.save('map.html')
+
+
+
 
