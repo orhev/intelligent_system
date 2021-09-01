@@ -194,26 +194,26 @@ def sharp_incline(route):
     return 0, 0
 
 
-def route_score(route, weights):
+def route_incline_parameters(route):
     """
-    Returns the route score according to its weights and property values
+    Returns the route incline parameters will give in the following order:
+        ['average incline', 'maximum incline', 'sharp incline percent', 'sharp incline distance']
 
         Parameters
         ----------
-        route : Route object
-        weights : dictionary
-            A dictionary that contains the route properties as its keys
-            and the weight values of each property as its values.
+        route : List
+        A route between start point and end point as a list of coordinates nodes
+
 
          Returns
         -------
-        score : float
-           score route
+        parameters : List
+
         """
-    score = 0
-    for parameter in weights.keys():
-        score += route.parameter * weights[parameter]
-    return score
+    avg_incline,  max_incline = get_route_incline(route)
+    sharp_incline_percent, sharp_incline_distance = sharp_incline(route)
+    parameters = [avg_incline, max_incline, sharp_incline_percent, sharp_incline_distance]
+    return parameters
 
 def get_route_map(route, zoom=15):
     """
