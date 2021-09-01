@@ -107,8 +107,8 @@ def get_elevation(route):
 
     Returns
     -------
-    elevation : float
-        The point height (height above sea level)
+    elevation : List of float
+        The points height (height above sea level)
     """
     query = ""
     for i in range(len(route)):
@@ -121,7 +121,7 @@ def get_elevation(route):
     return elevation
 
 
-def incline_along_route(route):
+def incline_along_route(elevation, route):
     """
     Calculate the inclines and distances between two consecutive points in the route
 
@@ -129,6 +129,8 @@ def incline_along_route(route):
     ----------
     route : list
         A route between start point and end point as a list of coordinates nodes (latitude, longitude)
+    elevation : List of float
+        The points height (height above sea level)
 
     Returns
     -------
@@ -141,51 +143,46 @@ def incline_along_route(route):
     distance = []
 
     if route:
-        elevation = get_elevation(route)
         for i in range(len(route) - 1):
             distance.append(hs.haversine(route[i], route[i + 1], unit=Unit.METERS))
             incline.append(((elevation[i + 1] - elevation[i]) / distance[i]) * 100)
 
     return incline, distance
 
-def get_route_incline(routes):
+def get_route_incline(incline):
     """
     Returns the average incline and maximum incline
 
     Parameters
     ----------
-    routes : two list
-        A route between start point and bus station as a list of coordinates nodes
-        and a route between bus station  and end point as a list of coordinates nodes
+    incline : List
+        list of incline between points
 
      Returns
     -------
     incline : tuple
         (average incline, max incline)
     """
-    incline = []
+
     ava_incline = 0
     max_incline = 0
-    for r in routes:
-        if r:
-            inc, dis = incline_along_route(r)
-            incline = incline + inc
-
-    ava_incline = sum(incline) / len(incline)
-    max_incline = max(incline)
+    if incline:
+        ava_incline = sum(incline) / len(incline)
+        max_incline = max(incline)
     return ava_incline, max_incline
 
 
-def sharp_incline(routes):
+def sharp_incline(incline, distance):
     """
     Calculate the length of the route (in meters) with a sharp slope (above 10%)
     and the percentage of this sub-route (with  a sharp slope) of the total route
 
     Parameters
     ----------
-    routes : tow list
-        A route between start point and bus station as a list of coordinates nodes
-        and a route between bus station  and end point as a list of coordinates nodes
+    incline : List
+        list of inclines between points
+    distance : List
+        list of distances between points
 
     Returns
     -------
@@ -193,23 +190,15 @@ def sharp_incline(routes):
         The length of the route with a sharp slope
         the percentage of this sub-route with  a sharp slope
     """
-    incline = []
-    distance = []
 
-    for r in routes:
-        inc, dis = incline_along_route(r)
-        incline = incline + inc
-        distance = distance + dis
-
-    tot_route = routes[0] + routes[1]
-    if tot_route:
+    if distance:
         distance_sharp_incline = [distance[i] for i in range(len(distance)) if incline[i] > 10]
-        return int((sum(distance_sharp_incline) / sum(distance_sharp_incline)) * 100), int(sum(distance_sharp_incline))
+        return int((sum(distance_sharp_incline) / sum(distance)) * 100), int(sum(distance_sharp_incline))
 
     return 0, 0
 
 
-def route_incline_parameters(route_forth, route_back):
+def route_incline_parameters(elevation, route_forth, route_back):
 
     """
     Returns the route incline parameters will give in the following order:
@@ -217,22 +206,39 @@ def route_incline_parameters(route_forth, route_back):
 
         Parameters
         ----------
+        elevation : List of float
+            The points height (height above sea level)
         route_forth : List
-        A route between start point and bus station as a list of coordinates nodes
+            A route between start point and bus station as a list of coordinates nodes
         route_back : List
-        A route between bus station  and end point as a list of coordinates nodes
+            A route between bus station  and end point as a list of coordinates nodes
 
 
          Returns
         -------
         parameters : List
+            avg_incline = The average slope of the route from the starting point to the station and from the station
+                          to the destination
+            max_incline = The maximum slope of the route from the starting point to the station and from the station
+                          to the destination
+            sharp_incline_percent = The percentage of the total route (from the starting point to the station and
+                                    from the station to the destination point) that has a sharp slope
+            sharp_incline_distance = The sub-route distance contained a sharp slope
+        elevation : List of float
+            The points height (height above sea level)
 
         """
 
-    avg_incline,  max_incline = get_route_incline([route_forth, route_back])
-    sharp_incline_percent, sharp_incline_distance = sharp_incline([route_forth, route_back])
+    inc, dis = incline_along_route(elevation, route_forth + route_back)
+
+    inc_forth = inc[: len(route_forth)-1]
+    inc_back = inc[len(route_forth) + 1:]
+    dis_forth = dis[: len(route_forth)-1]
+    dis_back = dis[len(route_forth) + 1:]
+    avg_incline,  max_incline = get_route_incline(inc_forth + inc_back)
+    sharp_incline_percent, sharp_incline_distance = sharp_incline(inc_forth + inc_back, dis_forth + dis_back)
     parameters = [avg_incline, max_incline, sharp_incline_percent, sharp_incline_distance]
-    return parameters
+    return parameters, elevation
 
 
 def get_route_map(route, zoom=15):
