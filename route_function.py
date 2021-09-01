@@ -148,61 +148,79 @@ def incline_along_route(route):
 
     return incline, distance
 
-def get_route_incline(route):
+def get_route_incline(routes):
     """
     Returns the average incline and maximum incline
 
     Parameters
     ----------
-    route : list
-        A route between start point and end point as a list of coordinates nodes
+    routes : two list
+        A route between start point and bus station as a list of coordinates nodes
+        and a route between bus station  and end point as a list of coordinates nodes
 
      Returns
     -------
     incline : tuple
         (average incline, max incline)
     """
-    incline, distance = incline_along_route(route)
+    incline = []
+    ava_incline = 0
+    max_incline = 0
+    for r in routes:
+        if r:
+            inc, dis = incline_along_route(r)
+            incline = incline + inc
 
-    if route:
-        return sum(incline) / len(incline), max(incline)
-    else:
-        return 0, 0
+    ava_incline = sum(incline) / len(incline)
+    max_incline = max(incline)
+    return ava_incline, max_incline
 
 
-def sharp_incline(route):
+def sharp_incline(routes):
     """
     Calculate the length of the route (in meters) with a sharp slope (above 10%)
     and the percentage of this sub-route (with  a sharp slope) of the total route
 
     Parameters
     ----------
-    route : list
-        A route between start point and end point as a list of coordinates nodes
+    routes : tow list
+        A route between start point and bus station as a list of coordinates nodes
+        and a route between bus station  and end point as a list of coordinates nodes
 
     Returns
     -------
-    length, percentage : tuple (int, int)
+    length, percentage : tuple (flat, flat)
         The length of the route with a sharp slope
         the percentage of this sub-route with  a sharp slope
     """
-    incline, distance = incline_along_route(route)
-    if route:
-        sharp_incline = [distance[i] for i in range(len(distance)) if incline[i] > 10]
-        return int((sum(sharp_incline) / sum(distance)) * 100), int(sum(sharp_incline))
+    incline = []
+    distance = []
+
+    for r in routes:
+        inc, dis = incline_along_route(r)
+        incline = incline + inc
+        distance = distance + dis
+
+    tot_route = routes[0] + routes[1]
+    if tot_route:
+        distance_sharp_incline = [distance[i] for i in range(len(distance)) if incline[i] > 10]
+        return int((sum(distance_sharp_incline) / sum(distance_sharp_incline)) * 100), int(sum(distance_sharp_incline))
 
     return 0, 0
 
 
-def route_incline_parameters(route):
+def route_incline_parameters(route_forth, route_back):
+
     """
     Returns the route incline parameters will give in the following order:
         ['average incline', 'maximum incline', 'sharp incline percent', 'sharp incline distance']
 
         Parameters
         ----------
-        route : List
-        A route between start point and end point as a list of coordinates nodes
+        route_forth : List
+        A route between start point and bus station as a list of coordinates nodes
+        route_back : List
+        A route between bus station  and end point as a list of coordinates nodes
 
 
          Returns
@@ -210,10 +228,12 @@ def route_incline_parameters(route):
         parameters : List
 
         """
-    avg_incline,  max_incline = get_route_incline(route)
-    sharp_incline_percent, sharp_incline_distance = sharp_incline(route)
+
+    avg_incline,  max_incline = get_route_incline([route_forth, route_back])
+    sharp_incline_percent, sharp_incline_distance = sharp_incline([route_forth, route_back])
     parameters = [avg_incline, max_incline, sharp_incline_percent, sharp_incline_distance]
     return parameters
+
 
 def get_route_map(route, zoom=15):
     """
@@ -235,7 +255,5 @@ def get_route_map(route, zoom=15):
     folium.Marker(end_coordinates, popup='<strong>End Location</strong>', tooltip=tooltip).add_to(m)
     folium.PolyLine(route, color='red', weight=10, opacity=0.8).add_to(m)
     m.save('map.html')
-
-
 
 
