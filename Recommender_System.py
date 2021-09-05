@@ -1,6 +1,7 @@
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense
 import pandas as pd
+from os import path
 
 
 def create_score_route_model(size_input, model_path):
@@ -17,16 +18,19 @@ def create_score_route_model(size_input, model_path):
     """
 
     # train the model
-    model = Sequential()
-    model.add(Dense(50, activation='relu', kernel_initializer='ones', bias_initializer='zeros',
-                    input_dim=size_input))
-    model.add(Dense(25, activation='relu', kernel_initializer='ones', bias_initializer='zeros'))
-    model.add(Dense(1, activation='relu', kernel_initializer='ones', bias_initializer='zeros'))
+    if path.exists(model_path):
+        model = load_model(model_path)
+    else:
+        model = Sequential()
+        model.add(Dense(50, activation='relu', kernel_initializer='ones', bias_initializer='zeros',
+                        input_dim=size_input))
+        model.add(Dense(25, activation='relu', kernel_initializer='ones', bias_initializer='zeros'))
+        model.add(Dense(1, activation='relu', kernel_initializer='ones', bias_initializer='zeros'))
 
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-    # save model
-    model.save(model_path)
+        # save model
+        model.save(model_path)
     return model
 
 

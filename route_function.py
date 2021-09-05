@@ -4,8 +4,15 @@ import requests
 import folium
 import haversine as hs
 from haversine import Unit
+from geopy.exc import GeocoderTimedOut
 
-
+def do_geocode(address,geolocator, attempt=1, max_attempts=5):
+    try:
+        return geolocator.geocode(address)
+    except GeocoderTimedOut:
+        if attempt <= max_attempts:
+            return do_geocode(address, attempt=attempt+1)
+        raise
 
 def get_address_landmark(address):
     """
@@ -23,7 +30,7 @@ def get_address_landmark(address):
         (latitude, longitude)
     """
     geolocator = Nominatim(user_agent="or")
-    location = geolocator.geocode(address)
+    location = do_geocode(address,geolocator)
     return location.latitude, location.longitude
 
 

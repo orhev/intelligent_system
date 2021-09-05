@@ -8,7 +8,3 @@ class Trip:
         self.days = days
         self.start_date = start_date
         self.end_date = end_date
-
-    # def add_stop_and_time(self,bus_stop,time_stop):
-    #     self.stops = bus_stop
-    #     self.times = time_stop
