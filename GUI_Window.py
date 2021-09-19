@@ -186,7 +186,6 @@ label_from = Label(root, text="From:", anchor=W)
 label_from.grid(column=0, row=0, sticky=W, pady=5)
 
 entry_from = Entry(root, bd=5, width=30)
-entry_from.insert(0, "גלבוע 28 חיפה ישראל")
 entry_from.grid(column=1, row=0, stick=EW, pady=5)
 
 # To: Label + Entry
@@ -194,7 +193,6 @@ label_to = Label(root, text="To:", anchor=W)
 label_to.grid(column=0, row=1, sticky=W, pady=5)
 
 entry_to = Entry(root, bd=5)
-entry_to.insert(0, "שדרות הנשיא,131,חיפה,ישראל")
 entry_to.grid(column=1, row=1, stick=EW, pady=5)
 
 # Flip button + loading PhotoImage
